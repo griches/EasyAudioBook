@@ -49,10 +49,19 @@ class AudiobookLibrary {
                   - Useful for freeing up storage space remotely via Shortcuts
 
                 Folder structure:
-                - Folder name becomes the book title (unless an .nfo file is present)
-                - cover.jpg -displayed as the book cover
-                - .nfo file -parsed for Title, Author, Read By, and Description
-                - MP3 files -played in order, numbered like "Name 001-130.mp3"
+                  MyAudiobook/
+                    cover.jpg       (optional book cover image)
+                    info.nfo        (optional metadata file)
+                    Chapter 001.mp3
+                    Chapter 002.mp3
+                    ...
+
+                - The folder name is used as the book title unless an .nfo file
+                  provides one
+                - Supported audio formats: MP3, M4A, M4B
+                - The .nfo file can contain Title, Author, Read By, and Description
+                - M4B files with embedded metadata will use the title, author,
+                  narrator, and cover art automatically
 
                 Settings:
                 - Open Settings > Easy Audiobook to configure:
