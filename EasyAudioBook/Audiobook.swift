@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import AVFoundation
 
 struct Audiobook: Identifiable, Sendable, Equatable {
     static func == (lhs: Audiobook, rhs: Audiobook) -> Bool {
@@ -47,6 +48,9 @@ struct Audiobook: Identifiable, Sendable, Equatable {
         let nfoFile = contents.first { $0.pathExtension.lowercased() == "nfo" }
         let nfoData = parseNFO(nfoFile)
 
+        // Extract embedded metadata from audio files (m4b/m4a)
+        let embeddedMeta = extractEmbeddedMetadata(from: mp3s)
+
         // Check for user overrides
         let overrideTitle = UserDefaults.standard.string(forKey: "bookTitle_\(folderName)")
         let overrideAuthor = UserDefaults.standard.string(forKey: "bookAuthor_\(folderName)")
@@ -54,11 +58,11 @@ struct Audiobook: Identifiable, Sendable, Equatable {
         return Audiobook(
             id: folderName,
             folderURL: folderURL,
-            title: overrideTitle ?? nfoData.title ?? folderName,
-            author: overrideAuthor ?? nfoData.author ?? "Unknown Author",
-            narrator: nfoData.narrator ?? "",
-            bookDescription: nfoData.description ?? "",
-            coverImage: coverImage,
+            title: overrideTitle ?? nfoData.title ?? embeddedMeta.title ?? folderName,
+            author: overrideAuthor ?? nfoData.author ?? embeddedMeta.author ?? "Unknown Author",
+            narrator: nfoData.narrator ?? embeddedMeta.narrator ?? "",
+            bookDescription: nfoData.description ?? embeddedMeta.description ?? "",
+            coverImage: coverImage ?? embeddedMeta.coverImage,
             mp3Files: mp3s
         )
     }
@@ -95,6 +99,65 @@ struct Audiobook: Identifiable, Sendable, Equatable {
             }
         }
         return nil
+    }
+
+    private struct EmbeddedMetadata {
+        var title: String?
+        var author: String?
+        var narrator: String?
+        var description: String?
+        var coverImage: UIImage?
+    }
+
+    private nonisolated static func extractEmbeddedMetadata(from files: [URL]) -> EmbeddedMetadata {
+        let m4Extensions: Set<String> = ["m4b", "m4a"]
+        guard let firstM4 = files.first(where: { m4Extensions.contains($0.pathExtension.lowercased()) }) else {
+            return EmbeddedMetadata()
+        }
+
+        let asset = AVURLAsset(url: firstM4)
+        let metadata = asset.metadata
+        var result = EmbeddedMetadata()
+
+        for item in metadata {
+            guard let key = item.commonKey?.rawValue else { continue }
+            switch key {
+            case "title":
+                result.title = item.stringValue
+            case "artist":
+                result.author = item.stringValue
+            case "artwork":
+                if let data = item.dataValue {
+                    result.coverImage = UIImage(data: data)
+                }
+            default:
+                break
+            }
+        }
+
+        // Narrator is stored in the composer/iTunesMetadata field
+        for item in metadata {
+            if let key = item.key as? String, key == "©wrt" {
+                result.narrator = item.stringValue
+            }
+        }
+        // Also check via identifier
+        if result.narrator == nil {
+            let composerItems = AVMetadataItem.metadataItems(from: asset.metadata,
+                                                              filteredByIdentifier: .iTunesMetadataComposer)
+            result.narrator = composerItems.first?.stringValue
+        }
+
+        // Description from the comment tag
+        let commentItems = AVMetadataItem.metadataItems(from: asset.metadata,
+                                                         filteredByIdentifier: .iTunesMetadataUserComment)
+        if let comment = commentItems.first?.stringValue {
+            // Strip HTML tags if present
+            result.description = comment.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        return result
     }
 
     private struct NFOData: Sendable {
