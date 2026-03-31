@@ -8,7 +8,7 @@ I built this for my dad. He's partially sighted and has poor motor control, but 
 
 He doesn't need playlists or a store or social features. He needs big buttons, a simple layout, and something that remembers where he was when he falls asleep halfway through a chapter.
 
-The app has a URL scheme so I can manage his library remotely. I can send him a new book or free up space on his phone without having to talk him through it.
+The app has a URL scheme so I can manage his library remotely. I can send him a new book or free up space on his phone without having to talk him through it. He just has to tap a link.
 
 ## Design Principles
 
