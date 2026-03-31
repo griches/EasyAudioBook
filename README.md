@@ -2,6 +2,12 @@
 
 An audiobook player for iOS built around simplicity and accessibility.
 
+<p align="center">
+  <img src="screenshots/library.png" width="300" alt="Library view" />
+  &nbsp;&nbsp;
+  <img src="screenshots/player.png" width="300" alt="Player view" />
+</p>
+
 ## Why this exists
 
 I built this for my dad. He's partially sighted and has poor motor control, but he still loves listening to books. I tried a bunch of audiobook apps and they were all too busy, too fiddly, or had text and buttons that were way too small for him to use comfortably.
