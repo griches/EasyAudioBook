@@ -10,6 +10,7 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
 
     private var session: URLSession?
     private var onComplete: (() -> Void)?
+    var backgroundCompletionHandler: (() -> Void)?
 
     func download(from url: URL, completion: @escaping () -> Void) {
         guard !isDownloading else { return }
@@ -20,7 +21,9 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
         errorText = nil
         onComplete = completion
 
-        let config = URLSessionConfiguration.default
+        let config = URLSessionConfiguration.background(withIdentifier: "mobi.bouncingball.EasyAudioBook.download")
+        config.isDiscretionary = false
+        config.sessionSendsLaunchEvents = true
         session = URLSession(configuration: config, delegate: self, delegateQueue: .main)
         session?.downloadTask(with: url).resume()
     }
@@ -76,6 +79,13 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
                 self.isDownloading = false
                 self.onComplete = nil
             }
+        }
+    }
+
+    nonisolated func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
+        DispatchQueue.main.async {
+            self.backgroundCompletionHandler?()
+            self.backgroundCompletionHandler = nil
         }
     }
 }

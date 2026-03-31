@@ -15,6 +15,7 @@ struct EasyAudioBookApp: App {
                 .environment(downloader)
                 .preferredColorScheme(.dark)
                 .onAppear {
+                    appDelegate.downloader = downloader
                     library.scan()
                 }
                 .onOpenURL { url in
