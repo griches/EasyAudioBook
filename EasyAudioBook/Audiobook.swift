@@ -118,6 +118,7 @@ struct Audiobook: Identifiable, Sendable, Equatable {
         let asset = AVURLAsset(url: firstM4)
         let metadata = asset.metadata
         var result = EmbeddedMetadata()
+        var album: String?
 
         for item in metadata {
             guard let key = item.commonKey?.rawValue else { continue }
@@ -130,9 +131,16 @@ struct Audiobook: Identifiable, Sendable, Equatable {
                 if let data = item.dataValue {
                     result.coverImage = UIImage(data: data)
                 }
+            case "albumName":
+                album = item.stringValue
             default:
                 break
             }
+        }
+
+        // If the title looks like a filename (underscores or file extension), prefer album
+        if let title = result.title, looksLikeFilename(title), let album, !album.isEmpty {
+            result.title = album
         }
 
         // Narrator is stored in the composer/iTunesMetadata field
@@ -158,6 +166,16 @@ struct Audiobook: Identifiable, Sendable, Equatable {
         }
 
         return result
+    }
+
+    private nonisolated static func looksLikeFilename(_ title: String) -> Bool {
+        let fileExtensions = ["m4b", "m4a", "mp3", "mp4", "aac", "wav", "flac", "ogg"]
+        let lowered = title.lowercased()
+        if lowered.contains("_") { return true }
+        for ext in fileExtensions {
+            if lowered.hasSuffix(".\(ext)") { return true }
+        }
+        return false
     }
 
     private struct NFOData: Sendable {
