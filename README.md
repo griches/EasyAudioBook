@@ -36,6 +36,7 @@ Books can be added and removed remotely via URL schemes, which is useful if you'
 - Background gradients adapt to the book's cover art
 - Position saved automatically across app restarts
 - Remote library management via URL schemes
+- Tap and hold a book cover in the library to edit its metadata or delete it
 
 ## Adding Books
 
