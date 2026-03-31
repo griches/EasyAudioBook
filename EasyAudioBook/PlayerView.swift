@@ -10,6 +10,16 @@ struct PlayerView: View {
     @State private var isScrubbing = false
     @State private var scrubValue: Double = 0
 
+    private var skipSeconds: Double {
+        let val = UserDefaults.standard.integer(forKey: "skipDurationSeconds")
+        return val > 0 ? Double(val) : 120
+    }
+
+    private var sleepMinutes: Int {
+        let val = UserDefaults.standard.integer(forKey: "sleepTimerMinutes")
+        return val > 0 ? val : 30
+    }
+
     var body: some View {
         GeometryReader { geo in
             let artworkSize = min(geo.size.width * 0.75, 440.0)
@@ -27,6 +37,25 @@ struct PlayerView: View {
                 .ignoresSafeArea()
 
                 VStack(spacing: 0) {
+                    // Custom back button — matches empty spacer on LibraryView
+                    HStack {
+                        Button {
+                            dismiss()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(.body, weight: .semibold))
+                                Text("Books")
+                                    .font(.system(.body))
+                            }
+                            .foregroundColor(.white)
+                        }
+                        .padding(.leading, 20)
+                        Spacer()
+                    }
+                    .padding(.top, 8)
+                    .frame(height: 30)
+
                     Spacer().frame(height: topPadding)
 
                     // Cover
@@ -107,7 +136,7 @@ struct PlayerView: View {
                                         .foregroundColor(.white)
                                 }
                             }
-                            .simultaneousGesture(skipGesture(seconds: -120))
+                            .simultaneousGesture(skipGesture(seconds: -skipSeconds))
                             Text("Back")
                                 .font(.system(.callout, weight: .semibold))
                                 .foregroundColor(.white)
@@ -148,7 +177,7 @@ struct PlayerView: View {
                                         .foregroundColor(.white)
                                 }
                             }
-                            .simultaneousGesture(skipGesture(seconds: 120))
+                            .simultaneousGesture(skipGesture(seconds: skipSeconds))
                             Text("Forward")
                                 .font(.system(.callout, weight: .semibold))
                                 .foregroundColor(.white)
@@ -186,12 +215,12 @@ struct PlayerView: View {
                             }
                         } else {
                             Button {
-                                player.playFor30Minutes()
+                                player.playForMinutes(sleepMinutes)
                             } label: {
                                 HStack(spacing: 12) {
                                     Image(systemName: "moon.zzz.fill")
                                         .font(.system(size: 26))
-                                    Text("Play for 30 minutes")
+                                    Text("Play for \(sleepMinutes) minutes")
                                         .font(.system(.title2, weight: .bold))
                                 }
                                 .foregroundColor(.black)
@@ -215,22 +244,7 @@ struct PlayerView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(.body, weight: .semibold))
-                        Text("Books")
-                            .font(.system(.body))
-                    }
-                    .foregroundColor(.white)
-                }
-            }
-        }
+        .navigationBarHidden(true)
         .onAppear {
             let t0 = CFAbsoluteTimeGetCurrent()
             print("[PLAYER] onAppear start")

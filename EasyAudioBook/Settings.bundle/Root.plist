@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>PreferenceSpecifiers</key>
+	<array>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>Playback</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Skip Duration</string>
+			<key>Key</key>
+			<string>skipDurationSeconds</string>
+			<key>DefaultValue</key>
+			<integer>120</integer>
+			<key>Titles</key>
+			<array>
+				<string>30 seconds</string>
+				<string>1 minute</string>
+				<string>2 minutes</string>
+				<string>3 minutes</string>
+				<string>5 minutes</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<integer>30</integer>
+				<integer>60</integer>
+				<integer>120</integer>
+				<integer>180</integer>
+				<integer>300</integer>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Sleep Timer Duration</string>
+			<key>Key</key>
+			<string>sleepTimerMinutes</string>
+			<key>DefaultValue</key>
+			<integer>30</integer>
+			<key>Titles</key>
+			<array>
+				<string>15 minutes</string>
+				<string>30 minutes</string>
+				<string>45 minutes</string>
+				<string>1 hour</string>
+				<string>1.5 hours</string>
+				<string>2 hours</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<integer>15</integer>
+				<integer>30</integer>
+				<integer>45</integer>
+				<integer>60</integer>
+				<integer>90</integer>
+				<integer>120</integer>
+			</array>
+		</dict>
+	</array>
+	<key>StringsTable</key>
+	<string>Root</string>
+</dict>
+</plist>

@@ -5,6 +5,7 @@ struct LibraryView: View {
     @Environment(AudioPlayer.self) private var player
     @Binding var showPlayer: Bool
     @State private var showEditSheet = false
+    @State private var showAddSheet = false
     @State private var gradientTop: Color = Color(red: 0.05, green: 0.05, blue: 0.1)
     @State private var gradientBottom: Color = .black
     @State private var refreshID = UUID()
@@ -13,7 +14,7 @@ struct LibraryView: View {
         GeometryReader { geo in
             let artworkSize = min(geo.size.width * 0.75, 440.0)
             let artworkHeight = min(geo.size.height * 0.42, 440.0)
-            let topPadding = geo.size.height * 0.06 + geo.safeAreaInsets.top
+            let topPadding = geo.size.height * 0.06
 
             ZStack {
                 LinearGradient(
@@ -25,6 +26,21 @@ struct LibraryView: View {
 
                 VStack(spacing: 0) {
                     if let book = library.selectedBook {
+                        // Match the back button area from PlayerView
+                        HStack {
+                            Spacer()
+                            Button {
+                                showAddSheet = true
+                            } label: {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(.white.opacity(0.8))
+                            }
+                            .padding(.trailing, 20)
+                        }
+                        .padding(.top, 8)
+                        .frame(height: 30)
+
                         Spacer().frame(height: topPadding)
 
                         // Cover — tap to play, long press to edit, swipe to change book
@@ -146,6 +162,12 @@ struct LibraryView: View {
         }
         .onChange(of: library.books) {
             updateGradient()
+        }
+        .sheet(isPresented: $showAddSheet, onDismiss: {
+            updateGradient()
+            refreshID = UUID()
+        }) {
+            AddBookView()
         }
         .sheet(isPresented: $showEditSheet, onDismiss: {
             updateGradient()

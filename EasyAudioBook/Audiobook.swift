@@ -36,8 +36,9 @@ struct Audiobook: Identifiable, Sendable, Equatable {
             return nil
         }
 
+        let audioExtensions: Set<String> = ["mp3", "m4b", "m4a"]
         let mp3s = contents
-            .filter { $0.pathExtension.lowercased() == "mp3" }
+            .filter { audioExtensions.contains($0.pathExtension.lowercased()) }
             .sorted { extractTrackNumber($0.lastPathComponent) < extractTrackNumber($1.lastPathComponent) }
 
         guard !mp3s.isEmpty else { return nil }

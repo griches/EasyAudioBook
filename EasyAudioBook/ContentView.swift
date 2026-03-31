@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var showPlayer = false
     @State private var isExtracting = false
     @State private var hasRestored = false
+    @State private var showAddSheet = false
 
     var body: some View {
         NavigationStack {
@@ -123,10 +124,38 @@ struct ContentView: View {
                 .font(.title)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
-            Text("Add audiobook folders using\nthe Files app")
+            Text("Add audiobook folders using\nthe Files app or tap +")
                 .font(.title3)
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)
+
+            Button {
+                showAddSheet = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 20, weight: .bold))
+                    Text("Add Book")
+                        .font(.system(.title3, weight: .semibold))
+                }
+                .foregroundColor(.black)
+                .frame(minHeight: 50)
+                .frame(width: 200)
+                .background(
+                    LinearGradient(
+                        colors: [Color.orange, Color.yellow],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(Capsule())
+            }
+            .padding(.top, 10)
+        }
+        .sheet(isPresented: $showAddSheet, onDismiss: {
+            library.scan()
+        }) {
+            AddBookView()
         }
     }
 }

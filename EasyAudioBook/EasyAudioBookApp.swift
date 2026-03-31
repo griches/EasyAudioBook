@@ -26,6 +26,19 @@ struct EasyAudioBookApp: App {
     private func handleURL(_ url: URL) {
         // Custom scheme: easyaudiobook://download?book=https://example.com/file.rar
         if url.scheme == "easyaudiobook" {
+            let host = url.host ?? ""
+
+            if host == "deleteall" {
+                // easyaudiobook://deleteall
+                player.stop()
+                let allBooks = library.books
+                for book in allBooks {
+                    library.deleteBook(book)
+                }
+                library.scan()
+                return
+            }
+
             if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                let bookParam = components.queryItems?.first(where: { $0.name == "book" })?.value,
                let downloadURL = URL(string: bookParam) {

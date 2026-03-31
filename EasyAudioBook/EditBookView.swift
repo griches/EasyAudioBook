@@ -3,6 +3,7 @@ import SwiftUI
 struct EditBookView: View {
     let book: Audiobook
     @Environment(AudiobookLibrary.self) private var library
+    @Environment(AudioPlayer.self) private var player
     @Environment(\.dismiss) private var dismiss
     @State private var title: String = ""
     @State private var author: String = ""
@@ -94,6 +95,7 @@ struct EditBookView: View {
             }
             .alert("Delete Audiobook?", isPresented: $showDeleteConfirm) {
                 Button("Delete", role: .destructive) {
+                    player.stop()
                     library.deleteBook(book)
                     dismiss()
                 }

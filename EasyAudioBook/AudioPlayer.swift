@@ -261,10 +261,14 @@ class AudioPlayer {
     }
 
     func playFor30Minutes() {
+        playForMinutes(30)
+    }
+
+    func playForMinutes(_ minutes: Int) {
         play()
         cancelSleepTimer()
         sleepTimerActive = true
-        sleepTimerRemaining = 30 * 60
+        sleepTimerRemaining = TimeInterval(minutes * 60)
 
         sleepTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             guard let self else { return }

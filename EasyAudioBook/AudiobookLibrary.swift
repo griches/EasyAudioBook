@@ -29,23 +29,35 @@ class AudiobookLibrary {
                 - Each folder should contain MP3 files and optionally a cover.jpg and .nfo file
                 - The app will detect the folder and display it in your library
 
-                Downloading audiobooks via URL scheme:
-                - Easy Audiobook supports a custom URL scheme for downloading books
-                  directly into the app from a link:
+                URL Schemes:
+                - Easy Audiobook supports custom URL schemes that can be used from
+                  Safari, Shortcuts, or any app that can open links:
 
+                  Download a book:
                   easyaudiobook://download?book=URL_TO_FILE
 
-                - Replace URL_TO_FILE with the full web address of the audiobook archive
-                - Example: easyaudiobook://download?book=https://myserver.com/books/thriller.rar
-                - When this link is opened on the device, the app will launch,
-                  download the file, extract it, and add it to the library automatically
-                - Supported archive formats: RAR, ZIP, 7z, TAR, GZ
+                  - Replace URL_TO_FILE with the full web address of the audiobook archive
+                  - Example: easyaudiobook://download?book=https://myserver.com/books/thriller.rar
+                  - The app will launch, download the file, extract it, and add it
+                    to the library automatically
+                  - Supported archive formats: RAR, ZIP, 7z, TAR, GZ
+
+                  Delete all books:
+                  easyaudiobook://deleteall
+
+                  - Stops playback and removes all audiobooks from the library
+                  - Useful for freeing up storage space remotely via Shortcuts
 
                 Folder structure:
                 - Folder name becomes the book title (unless an .nfo file is present)
                 - cover.jpg — displayed as the book cover
                 - .nfo file — parsed for Title, Author, Read By, and Description
                 - MP3 files — played in order, numbered like "Name 001-130.mp3"
+
+                Settings:
+                - Open Settings > Easy Audiobook to configure:
+                  - Skip Duration: how far Back/Forward buttons jump (default: 2 minutes)
+                  - Sleep Timer Duration: how long the sleep timer plays for (default: 30 minutes)
                 """
                 fm.createFile(atPath: instructions.path, contents: Data(text.utf8))
             }
@@ -55,6 +67,23 @@ class AudiobookLibrary {
         RARHandler.extractArchivesInDocuments()
 
         guard let docsURL = fm.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+
+        // Wrap any loose audio files (e.g. a bare .m4b) into their own folder
+        let audioExtensions: Set<String> = ["mp3", "m4b", "m4a"]
+        if let topLevel = try? fm.contentsOfDirectory(at: docsURL, includingPropertiesForKeys: nil) {
+            for file in topLevel {
+                guard audioExtensions.contains(file.pathExtension.lowercased()) else { continue }
+                let folderName = file.deletingPathExtension().lastPathComponent
+                let folder = docsURL.appendingPathComponent(folderName)
+                if !fm.fileExists(atPath: folder.path) {
+                    try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
+                }
+                let dest = folder.appendingPathComponent(file.lastPathComponent)
+                if !fm.fileExists(atPath: dest.path) {
+                    try? fm.moveItem(at: file, to: dest)
+                }
+            }
+        }
 
         var loadedBooks: [Audiobook] = []
 
