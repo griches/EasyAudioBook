@@ -50,9 +50,9 @@ class AudiobookLibrary {
 
                 Folder structure:
                 - Folder name becomes the book title (unless an .nfo file is present)
-                - cover.jpg — displayed as the book cover
-                - .nfo file — parsed for Title, Author, Read By, and Description
-                - MP3 files — played in order, numbered like "Name 001-130.mp3"
+                - cover.jpg -displayed as the book cover
+                - .nfo file -parsed for Title, Author, Read By, and Description
+                - MP3 files -played in order, numbered like "Name 001-130.mp3"
 
                 Settings:
                 - Open Settings > Easy Audiobook to configure:
