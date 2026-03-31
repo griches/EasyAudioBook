@@ -22,7 +22,7 @@ The whole app is two screens: your library and the player. There are no tabs, no
 
 Position is saved constantly. If the app gets closed, the phone restarts, or he just falls asleep, he picks up exactly where he left off.
 
-Books can be added and removed remotely via URL schemes and Shortcuts, which is useful if you're managing the device for someone else.
+Books can be added and removed remotely via URL schemes, which is useful if you're managing the device for someone else.
 
 ## Features
 
@@ -61,7 +61,7 @@ M4B files with embedded metadata don't need a cover image or .nfo file. The app 
 
 ## URL Schemes
 
-These work from Safari, Shortcuts, or any app that can open URLs. Useful for managing someone's library remotely.
+These work from Safari or any app that can open URLs. Send someone a link and they just have to tap it. Useful for managing someone's library remotely.
 
 | URL | Action |
 |-----|--------|
