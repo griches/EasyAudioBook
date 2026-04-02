@@ -2,6 +2,8 @@
 
 An audiobook player for iOS built around simplicity and accessibility.
 
+[![Download on the App Store](https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg)](https://apps.apple.com/gb/app/easy-audiobook/id6761441597)
+
 <p align="center">
   <img src="screenshots/library.png" width="300" alt="Library view" />
   &nbsp;&nbsp;

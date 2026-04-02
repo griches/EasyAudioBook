@@ -17,15 +17,55 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
 
         isDownloading = true
         progress = 0
-        statusText = "Downloading..."
+        statusText = "Checking available space..."
         errorText = nil
         onComplete = completion
 
+        // HEAD request to get file size before downloading
+        var headRequest = URLRequest(url: url)
+        headRequest.httpMethod = "HEAD"
+        URLSession.shared.dataTask(with: headRequest) { [weak self] _, response, error in
+            DispatchQueue.main.async {
+                guard let self else { return }
+
+                if let error {
+                    self.errorText = error.localizedDescription
+                    self.statusText = "Download failed"
+                    self.isDownloading = false
+                    self.onComplete = nil
+                    return
+                }
+
+                let fileSize = (response as? HTTPURLResponse)?.expectedContentLength ?? -1
+
+                if fileSize > 0, let freeBytes = self.availableStorageBytes(), fileSize > freeBytes {
+                    let fileMB = Double(fileSize) / 1_000_000
+                    let freeMB = Double(freeBytes) / 1_000_000
+                    self.errorText = String(format: "Not enough storage. The file needs %.0f MB but only %.0f MB is available.", fileMB, freeMB)
+                    self.statusText = "Not enough space"
+                    self.isDownloading = false
+                    self.onComplete = nil
+                    return
+                }
+
+                self.statusText = "Downloading..."
+                self.startDownload(from: url)
+            }
+        }.resume()
+    }
+
+    private func startDownload(from url: URL) {
         let config = URLSessionConfiguration.background(withIdentifier: "mobi.bouncingball.EasyAudioBook.download")
         config.isDiscretionary = false
         config.sessionSendsLaunchEvents = true
         session = URLSession(configuration: config, delegate: self, delegateQueue: .main)
         session?.downloadTask(with: url).resume()
+    }
+
+    private func availableStorageBytes() -> Int64? {
+        guard let values = try? URL(fileURLWithPath: NSHomeDirectory()).resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]),
+              let bytes = values.volumeAvailableCapacityForImportantUsage else { return nil }
+        return bytes
     }
 
     // MARK: - URLSessionDownloadDelegate
