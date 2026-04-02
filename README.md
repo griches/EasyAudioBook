@@ -67,7 +67,11 @@ These work from Safari or any app that can open URLs. Send someone a link and th
 | URL | Action |
 |-----|--------|
 | `easyaudiobook://download?book=<URL>` | Download and extract an audiobook archive |
+| `easyaudiobook://delete?book=<TITLE>` | Delete a single book by title |
 | `easyaudiobook://deleteall` | Stop playback and remove all books |
+| `easyaudiobook://settings?skipDurationSeconds=<N>&sleepTimerMinutes=<N>` | Change playback settings |
+
+The `delete` URL matches by book title (URL-encoded). The `settings` URL accepts either or both parameters — only the ones you include are changed. Skip duration accepts 1–600 seconds, sleep timer accepts 1–480 minutes.
 
 ## Settings
 

@@ -16,4 +16,5 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 extension Notification.Name {
     static let audiobookArchiveReceived = Notification.Name("audiobookArchiveReceived")
+    static let settingsChanged = Notification.Name("settingsChanged")
 }

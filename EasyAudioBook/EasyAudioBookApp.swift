@@ -40,6 +40,39 @@ struct EasyAudioBookApp: App {
                 return
             }
 
+            if host == "delete" {
+                // easyaudiobook://delete?book=My%20Audiobook%20Title
+                if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                   let title = components.queryItems?.first(where: { $0.name == "book" })?.value,
+                   let book = library.books.first(where: { $0.title == title }) {
+                    player.stop()
+                    library.deleteBook(book)
+                }
+                return
+            }
+
+            if host == "settings" {
+                // easyaudiobook://settings?skipDurationSeconds=60&sleepTimerMinutes=45
+                if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+                    for item in components.queryItems ?? [] {
+                        switch item.name {
+                        case "skipDurationSeconds":
+                            if let val = Int(item.value ?? ""), val > 0, val <= 600 {
+                                UserDefaults.standard.set(val, forKey: "skipDurationSeconds")
+                            }
+                        case "sleepTimerMinutes":
+                            if let val = Int(item.value ?? ""), val > 0, val <= 480 {
+                                UserDefaults.standard.set(val, forKey: "sleepTimerMinutes")
+                            }
+                        default:
+                            break
+                        }
+                    }
+                    NotificationCenter.default.post(name: .settingsChanged, object: nil)
+                }
+                return
+            }
+
             if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                let bookParam = components.queryItems?.first(where: { $0.name == "book" })?.value,
                let downloadURL = URL(string: bookParam) {

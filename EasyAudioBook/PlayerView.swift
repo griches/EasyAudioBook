@@ -9,16 +9,14 @@ struct PlayerView: View {
     @State private var gradientBottom: Color = .black
     @State private var isScrubbing = false
     @State private var scrubValue: Double = 0
-
-    private var skipSeconds: Double {
+    @State private var skipSeconds: Int = {
         let val = UserDefaults.standard.integer(forKey: "skipDurationSeconds")
-        return val > 0 ? Double(val) : 120
-    }
-
-    private var sleepMinutes: Int {
+        return val > 0 ? val : 120
+    }()
+    @State private var sleepMinutes: Int = {
         let val = UserDefaults.standard.integer(forKey: "sleepTimerMinutes")
         return val > 0 ? val : 30
-    }
+    }()
 
     var body: some View {
         GeometryReader { geo in
@@ -136,7 +134,7 @@ struct PlayerView: View {
                                         .foregroundColor(.white)
                                 }
                             }
-                            .simultaneousGesture(skipGesture(seconds: -skipSeconds))
+                            .simultaneousGesture(skipGesture(seconds: Double(-skipSeconds)))
                             Text("Back")
                                 .font(.system(.callout, weight: .semibold))
                                 .foregroundColor(.white)
@@ -177,7 +175,7 @@ struct PlayerView: View {
                                         .foregroundColor(.white)
                                 }
                             }
-                            .simultaneousGesture(skipGesture(seconds: skipSeconds))
+                            .simultaneousGesture(skipGesture(seconds: Double(skipSeconds)))
                             Text("Forward")
                                 .font(.system(.callout, weight: .semibold))
                                 .foregroundColor(.white)
@@ -191,28 +189,24 @@ struct PlayerView: View {
                     // Sleep timer lozenge
                     Group {
                         if player.sleepTimerActive {
-                            Button {
-                                player.cancelSleepTimer()
-                            } label: {
-                                HStack(spacing: 12) {
-                                    Image(systemName: "moon.fill")
-                                        .font(.system(size: 26))
-                                    Text("\(timerText) remaining")
-                                        .font(.system(.title2, weight: .bold))
-                                        .monospacedDigit()
-                                }
-                                .foregroundColor(.black)
-                                .frame(minHeight: 70)
-                                .frame(width: artworkSize)
-                                .background(
-                                    LinearGradient(
-                                        colors: [Color.orange, Color.yellow],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .clipShape(Capsule())
+                            HStack(spacing: 12) {
+                                Image(systemName: "moon.fill")
+                                    .font(.system(size: 26))
+                                Text("\(timerText) remaining")
+                                    .font(.system(.title2, weight: .bold))
+                                    .monospacedDigit()
                             }
+                            .foregroundColor(.black)
+                            .frame(minHeight: 70)
+                            .frame(width: artworkSize)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.orange, Color.yellow],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .clipShape(Capsule())
                         } else {
                             Button {
                                 player.playForMinutes(sleepMinutes)
@@ -257,6 +251,19 @@ struct PlayerView: View {
             }
             print("[PLAYER] gradient: \(String(format: "%.0f", (CFAbsoluteTimeGetCurrent() - t0) * 1000))ms")
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            refreshSettings()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .settingsChanged)) { _ in
+            refreshSettings()
+        }
+    }
+
+    private func refreshSettings() {
+        let skip = UserDefaults.standard.integer(forKey: "skipDurationSeconds")
+        skipSeconds = skip > 0 ? skip : 120
+        let sleep = UserDefaults.standard.integer(forKey: "sleepTimerMinutes")
+        sleepMinutes = sleep > 0 ? sleep : 30
     }
 
     // MARK: - Subviews

@@ -42,11 +42,25 @@ class AudiobookLibrary {
                     to the library automatically
                   - Supported archive formats: RAR, ZIP, 7z, TAR, GZ
 
+                  Delete a single book:
+                  easyaudiobook://delete?book=BOOK_TITLE
+
+                  - Replace BOOK_TITLE with the title of the audiobook to delete
+                  - Example: easyaudiobook://delete?book=My%20Audiobook
+                  - Stops playback if that book is currently playing
+
                   Delete all books:
                   easyaudiobook://deleteall
 
                   - Stops playback and removes all audiobooks from the library
                   - Useful for freeing up storage space remotely via Shortcuts
+
+                  Change settings:
+                  easyaudiobook://settings?skipDurationSeconds=60&sleepTimerMinutes=45
+
+                  - skipDurationSeconds: forward/back skip amount (1–600)
+                  - sleepTimerMinutes: sleep timer duration (1–480)
+                  - Both parameters are optional; only included ones are changed
 
                 Folder structure:
                   MyAudiobook/
