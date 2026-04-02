@@ -1,4 +1,7 @@
 import SwiftUI
+import os.log
+
+private let log = Logger(subsystem: "mobi.bouncingball.EasyAudioBook", category: "URLHandler")
 
 @main
 struct EasyAudioBookApp: App {
@@ -25,9 +28,12 @@ struct EasyAudioBookApp: App {
     }
 
     private func handleURL(_ url: URL) {
+        log.info("handleURL called with: \(url.absoluteString, privacy: .public)")
+
         // Custom scheme: easyaudiobook://download?book=https://example.com/file.rar
         if url.scheme == "easyaudiobook" {
             let host = url.host ?? ""
+            log.info("Scheme: easyaudiobook, host: \(host, privacy: .public)")
 
             if host == "deleteall" {
                 // easyaudiobook://deleteall
@@ -73,17 +79,23 @@ struct EasyAudioBookApp: App {
                 return
             }
 
-            if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-               let bookParam = components.queryItems?.first(where: { $0.name == "book" })?.value,
-               let downloadURL = URL(string: bookParam) {
+            let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            let bookParam = components?.queryItems?.first(where: { $0.name == "book" })?.value
+            log.info("Download branch — components: \(components?.string ?? "nil", privacy: .public), bookParam: \(bookParam ?? "nil", privacy: .public)")
+
+            if let bookParam, let downloadURL = URL(string: bookParam) {
+                log.info("Starting download for: \(downloadURL.absoluteString, privacy: .public)")
                 downloader.download(from: downloadURL) {
                     library.scan()
                 }
+            } else {
+                log.error("Failed to parse download URL from link. Query items: \(components?.queryItems?.description ?? "nil", privacy: .public)")
             }
             return
         }
 
         // Regular file open (shared RAR/ZIP)
+        log.info("Handling as file open: \(url.path, privacy: .public)")
         RARHandler.copyIncomingFile(at: url)
         NotificationCenter.default.post(name: .audiobookArchiveReceived, object: nil)
     }
