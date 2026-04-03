@@ -101,7 +101,14 @@ struct Audiobook: Identifiable, Sendable, Equatable {
         return nil
     }
 
-    private struct EmbeddedMetadata {
+    private struct EmbeddedMetadata: Sendable {
+        nonisolated init(title: String? = nil, author: String? = nil, narrator: String? = nil, description: String? = nil, coverImage: UIImage? = nil) {
+            self.title = title
+            self.author = author
+            self.narrator = narrator
+            self.description = description
+            self.coverImage = coverImage
+        }
         var title: String?
         var author: String?
         var narrator: String?
@@ -128,8 +135,10 @@ struct Audiobook: Identifiable, Sendable, Equatable {
             case "artist":
                 result.author = item.stringValue
             case "artwork":
-                if let data = item.dataValue {
-                    result.coverImage = UIImage(data: data)
+                if let data = item.dataValue, let original = UIImage(data: data) {
+                    // Re-render to strip embedded metadata (VoiceOver reads it)
+                    let renderer = UIGraphicsImageRenderer(size: original.size)
+                    result.coverImage = renderer.image { _ in original.draw(at: .zero) }
                 }
             case "albumName":
                 album = item.stringValue
@@ -151,13 +160,13 @@ struct Audiobook: Identifiable, Sendable, Equatable {
         }
         // Also check via identifier
         if result.narrator == nil {
-            let composerItems = AVMetadataItem.metadataItems(from: asset.metadata,
+            let composerItems = AVMetadataItem.metadataItems(from: metadata,
                                                               filteredByIdentifier: .iTunesMetadataComposer)
             result.narrator = composerItems.first?.stringValue
         }
 
         // Description from the comment tag
-        let commentItems = AVMetadataItem.metadataItems(from: asset.metadata,
+        let commentItems = AVMetadataItem.metadataItems(from: metadata,
                                                          filteredByIdentifier: .iTunesMetadataUserComment)
         if let comment = commentItems.first?.stringValue {
             // Strip HTML tags if present
@@ -179,6 +188,12 @@ struct Audiobook: Identifiable, Sendable, Equatable {
     }
 
     private struct NFOData: Sendable {
+        nonisolated init(title: String? = nil, author: String? = nil, narrator: String? = nil, description: String? = nil) {
+            self.title = title
+            self.author = author
+            self.narrator = narrator
+            self.description = description
+        }
         var title: String?
         var author: String?
         var narrator: String?

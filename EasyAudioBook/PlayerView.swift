@@ -56,29 +56,36 @@ struct PlayerView: View {
 
                     Spacer().frame(height: topPadding)
 
-                    // Cover
-                    coverView(size: artworkSize, height: artworkHeight)
+                    // Cover, title & author — grouped as one accessibility element
+                    VStack(spacing: 0) {
+                        coverView(size: artworkSize, height: artworkHeight)
 
-                    Spacer().frame(height: geo.size.height * 0.03)
+                        Spacer().frame(height: geo.size.height * 0.03)
 
-                    // Title & author
-                    Text(book.title)
-                        .font(.system(.title, weight: .bold))
-                        .foregroundColor(.white)
-                        .shadow(color: .black.opacity(0.9), radius: 26, x: 0, y: 4)
-                        .shadow(color: .black.opacity(0.6), radius: 40, x: 0, y: 8)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .dynamicTypeSize(...DynamicTypeSize.accessibility3)
-                        .padding(.horizontal, 20)
+                        Text(book.title)
+                            .font(.system(.title, weight: .bold))
+                            .foregroundColor(.white)
+                            .shadow(color: .black.opacity(0.9), radius: 26, x: 0, y: 4)
+                            .shadow(color: .black.opacity(0.6), radius: 40, x: 0, y: 8)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+                            .padding(.horizontal, 20)
 
-                    Text(book.author)
-                        .font(.system(.title3))
-                        .foregroundColor(.gray)
-                        .shadow(color: .black.opacity(0.9), radius: 26, x: 0, y: 4)
-                        .shadow(color: .black.opacity(0.6), radius: 40, x: 0, y: 8)
-                        .padding(.top, 6)
-                        .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+                        Text(book.author)
+                            .font(.system(.title3))
+                            .foregroundColor(.gray)
+                            .shadow(color: .black.opacity(0.9), radius: 26, x: 0, y: 4)
+                            .shadow(color: .black.opacity(0.6), radius: 40, x: 0, y: 8)
+                            .padding(.top, 6)
+                            .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel({
+                        let label = "\(book.title), by \(book.author)"
+                        print("[A11Y] Player label: \(label)")
+                        return label
+                    }())
 
                     Spacer()
 
@@ -114,6 +121,8 @@ struct PlayerView: View {
                                 .monospacedDigit()
                                 .foregroundColor(.gray)
                         }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("\(spokenTime(elapsedText)) played, \(spokenTime(remainingText)) remaining")
                     }
                     .dynamicTypeSize(...DynamicTypeSize.accessibility3)
                     .frame(width: artworkSize)
@@ -135,9 +144,11 @@ struct PlayerView: View {
                                 }
                             }
                             .simultaneousGesture(skipGesture(seconds: Double(-skipSeconds)))
+                            .accessibilityLabel("Back")
                             Text("Back")
                                 .font(.system(.callout, weight: .semibold))
                                 .foregroundColor(.white)
+                                .accessibilityHidden(true)
                         }
 
                         Spacer()
@@ -156,9 +167,11 @@ struct PlayerView: View {
                                         .foregroundColor(.white)
                                 }
                             }
+                            .accessibilityLabel(player.isPlaying ? "Stop" : "Play")
                             Text(player.isPlaying ? "Stop" : "Play")
                                 .font(.system(.callout, weight: .semibold))
                                 .foregroundColor(player.isPlaying ? .red : .green)
+                                .accessibilityHidden(true)
                         }
 
                         Spacer()
@@ -176,9 +189,11 @@ struct PlayerView: View {
                                 }
                             }
                             .simultaneousGesture(skipGesture(seconds: Double(skipSeconds)))
+                            .accessibilityLabel("Forward")
                             Text("Forward")
                                 .font(.system(.callout, weight: .semibold))
                                 .foregroundColor(.white)
+                                .accessibilityHidden(true)
                         }
                     }
                     .dynamicTypeSize(...DynamicTypeSize.accessibility3)
@@ -272,6 +287,7 @@ struct PlayerView: View {
     private func coverView(size: CGFloat, height: CGFloat) -> some View {
         if let image = book.coverImage {
             Image(uiImage: image)
+                .renderingMode(.original)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: size, height: height)
@@ -281,6 +297,8 @@ struct PlayerView: View {
                         .stroke(Color.white.opacity(0.15), lineWidth: 1)
                 )
                 .shadow(color: .white.opacity(0.15), radius: 12)
+                .accessibilityHidden(true)
+                .accessibilityLabel("")
         } else {
             ZStack {
                 RoundedRectangle(cornerRadius: 16)
@@ -324,6 +342,23 @@ struct PlayerView: View {
         let minutes = Int(player.sleepTimerRemaining) / 60
         let seconds = Int(player.sleepTimerRemaining) % 60
         return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    private func spokenTime(_ formatted: String) -> String {
+        let parts = formatted.split(separator: ":").compactMap { Int($0) }
+        switch parts.count {
+        case 3:
+            let h = parts[0], m = parts[1]
+            if h > 0 && m > 0 { return "\(h) \(h == 1 ? "hour" : "hours") \(m) \(m == 1 ? "minute" : "minutes")" }
+            if h > 0 { return "\(h) \(h == 1 ? "hour" : "hours")" }
+            return "\(m) \(m == 1 ? "minute" : "minutes")"
+        case 2:
+            let m = parts[0], s = parts[1]
+            if m > 0 { return "\(m) \(m == 1 ? "minute" : "minutes")" }
+            return "\(s) \(s == 1 ? "second" : "seconds")"
+        default:
+            return formatted
+        }
     }
 
     private func formatTime(_ seconds: TimeInterval) -> String {

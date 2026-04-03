@@ -2,10 +2,9 @@ import Foundation
 import Observation
 import os.log
 
-private let log = Logger(subsystem: "mobi.bouncingball.EasyAudioBook", category: "BookDownloader")
-
 @Observable
 class BookDownloader: NSObject, URLSessionDownloadDelegate {
+    private static let log = Logger(subsystem: "mobi.bouncingball.EasyAudioBook", category: "BookDownloader")
     var isDownloading = false
     var progress: Double = 0
     var statusText = ""
@@ -17,11 +16,11 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
 
     func download(from url: URL, completion: @escaping () -> Void) {
         guard !isDownloading else {
-            log.warning("Download rejected — already downloading")
+            Self.log.warning("Download rejected — already downloading")
             return
         }
 
-        log.info("Starting download from: \(url.absoluteString, privacy: .public)")
+        Self.log.info("Starting download from: \(url.absoluteString, privacy: .public)")
         isDownloading = true
         progress = 0
         statusText = "Checking available space..."
@@ -34,16 +33,16 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
         URLSession.shared.dataTask(with: headRequest) { [weak self] _, response, error in
             DispatchQueue.main.async {
                 guard let self else {
-                    log.error("Self was deallocated during HEAD request")
+                    Self.log.error("Self was deallocated during HEAD request")
                     return
                 }
 
                 if let httpResponse = response as? HTTPURLResponse {
-                    log.info("HEAD response: status=\(httpResponse.statusCode), contentLength=\(httpResponse.expectedContentLength)")
+                    Self.log.info("HEAD response: status=\(httpResponse.statusCode), contentLength=\(httpResponse.expectedContentLength)")
                 }
 
                 if let error {
-                    log.error("HEAD request failed: \(error.localizedDescription, privacy: .public) — proceeding with download anyway")
+                    Self.log.error("HEAD request failed: \(error.localizedDescription, privacy: .public) — proceeding with download anyway")
                     // Don't abort on HEAD failure — many servers block HEAD requests
                     self.statusText = "Downloading..."
                     self.startDownload(from: url)
@@ -52,12 +51,12 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
 
                 let fileSize = (response as? HTTPURLResponse)?.expectedContentLength ?? -1
                 let freeBytes = self.availableStorageBytes()
-                log.info("File size: \(fileSize) bytes, free space: \(freeBytes ?? -1) bytes")
+                Self.log.info("File size: \(fileSize) bytes, free space: \(freeBytes ?? -1) bytes")
 
                 if fileSize > 0, let freeBytes, fileSize > freeBytes {
                     let fileMB = Double(fileSize) / 1_000_000
                     let freeMB = Double(freeBytes) / 1_000_000
-                    log.error("Not enough storage: need \(fileMB)MB, have \(freeMB)MB")
+                    Self.log.error("Not enough storage: need \(fileMB)MB, have \(freeMB)MB")
                     self.errorText = String(format: "Not enough storage. The file needs %.0f MB but only %.0f MB is available.", fileMB, freeMB)
                     self.statusText = "Not enough space"
                     self.isDownloading = false
@@ -65,7 +64,7 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
                     return
                 }
 
-                log.info("Storage check passed, starting download")
+                Self.log.info("Storage check passed, starting download")
                 self.statusText = "Downloading..."
                 self.startDownload(from: url)
             }
@@ -73,13 +72,13 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
     }
 
     private func startDownload(from url: URL) {
-        log.info("Creating background download session for: \(url.absoluteString, privacy: .public)")
+        Self.log.info("Creating background download session for: \(url.absoluteString, privacy: .public)")
 
         // Cancel any leftover tasks from a previous session with this identifier
         if let existing = session {
             existing.getAllTasks { tasks in
                 for task in tasks {
-                    log.info("Cancelling leftover task: \(task.taskIdentifier)")
+                    Self.log.info("Cancelling leftover task: \(task.taskIdentifier)")
                     task.cancel()
                 }
             }
@@ -94,12 +93,12 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
         // Also cancel any tasks reconnected from a prior app launch
         session?.getAllTasks { [weak self] tasks in
             for task in tasks {
-                log.info("Cancelling reconnected task: \(task.taskIdentifier)")
+                Self.log.info("Cancelling reconnected task: \(task.taskIdentifier)")
                 task.cancel()
             }
             // Start the new download after clearing old tasks
             self?.session?.downloadTask(with: url).resume()
-            log.info("Download task started")
+            Self.log.info("Download task started")
         }
     }
 
@@ -112,24 +111,24 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
     // MARK: - URLSessionDownloadDelegate
 
     nonisolated func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        log.info("Download finished to temp location: \(location.path, privacy: .public)")
+        Self.log.info("Download finished to temp location: \(location.path, privacy: .public)")
         let fm = FileManager.default
         guard let docsURL = fm.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            log.error("Could not get documents directory")
+            Self.log.error("Could not get documents directory")
             return
         }
 
         // Use the filename from the response, or fall back to the URL's last path component
         let suggestedName = downloadTask.response?.suggestedFilename ?? downloadTask.originalRequest?.url?.lastPathComponent ?? "download.rar"
         let destFile = docsURL.appendingPathComponent(suggestedName)
-        log.info("Moving download to: \(destFile.path, privacy: .public)")
+        Self.log.info("Moving download to: \(destFile.path, privacy: .public)")
 
         do {
             try? fm.removeItem(at: destFile)
             try fm.moveItem(at: location, to: destFile)
-            log.info("File moved successfully")
+            Self.log.info("File moved successfully")
         } catch {
-            log.error("Failed to move downloaded file: \(error.localizedDescription, privacy: .public)")
+            Self.log.error("Failed to move downloaded file: \(error.localizedDescription, privacy: .public)")
         }
 
         DispatchQueue.main.async {
@@ -166,10 +165,10 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
         if let error {
             let nsError = error as NSError
             if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled {
-                log.info("Ignoring cancelled task \(task.taskIdentifier)")
+                Self.log.info("Ignoring cancelled task \(task.taskIdentifier)")
                 return
             }
-            log.error("Download task completed with error: \(error.localizedDescription, privacy: .public)")
+            Self.log.error("Download task completed with error: \(error.localizedDescription, privacy: .public)")
             DispatchQueue.main.async {
                 self.errorText = error.localizedDescription
                 self.statusText = "Download failed"
@@ -177,7 +176,7 @@ class BookDownloader: NSObject, URLSessionDownloadDelegate {
                 self.onComplete = nil
             }
         } else {
-            log.info("Download task completed successfully")
+            Self.log.info("Download task completed successfully")
         }
     }
 

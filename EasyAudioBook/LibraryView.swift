@@ -43,56 +43,63 @@ struct LibraryView: View {
 
                         Spacer().frame(height: topPadding)
 
-                        // Cover — tap to play, long press to edit, swipe to change book
-                        coverView(for: book, width: artworkSize, height: artworkHeight)
-                            .contentShape(Rectangle())
-                            .gesture(
-                                DragGesture(minimumDistance: 50, coordinateSpace: .local)
-                                    .onEnded { value in
-                                        guard library.books.count > 1 else { return }
-                                        if value.translation.width < -50 {
-                                            library.selectNext()
-                                            updateGradient()
-                                        } else if value.translation.width > 50 {
-                                            library.selectPrevious()
-                                            updateGradient()
+                        // Cover, title & author — grouped as one accessibility element
+                        VStack(spacing: 0) {
+                            coverView(for: book, width: artworkSize, height: artworkHeight)
+                                .contentShape(Rectangle())
+                                .gesture(
+                                    DragGesture(minimumDistance: 50, coordinateSpace: .local)
+                                        .onEnded { value in
+                                            guard library.books.count > 1 else { return }
+                                            if value.translation.width < -50 {
+                                                library.selectNext()
+                                                updateGradient()
+                                            } else if value.translation.width > 50 {
+                                                library.selectPrevious()
+                                                updateGradient()
+                                            }
                                         }
-                                    }
-                            )
-                            .simultaneousGesture(
-                                LongPressGesture(minimumDuration: 0.5)
-                                    .onEnded { _ in
-                                        showEditSheet = true
-                                    }
-                            )
-                            .simultaneousGesture(
-                                TapGesture()
-                                    .onEnded {
-                                        player.loadBook(book)
-                                        showPlayer = true
-                                    }
-                            )
+                                )
+                                .simultaneousGesture(
+                                    LongPressGesture(minimumDuration: 0.5)
+                                        .onEnded { _ in
+                                            showEditSheet = true
+                                        }
+                                )
+                                .simultaneousGesture(
+                                    TapGesture()
+                                        .onEnded {
+                                            player.loadBook(book)
+                                            showPlayer = true
+                                        }
+                                )
 
-                        Spacer().frame(height: geo.size.height * 0.03)
+                            Spacer().frame(height: geo.size.height * 0.03)
 
-                        // Title & author
-                        Text(book.title)
-                            .font(.system(.title, weight: .bold))
-                            .foregroundColor(.white)
-                            .shadow(color: .black.opacity(0.9), radius: 26, x: 0, y: 4)
-                            .shadow(color: .black.opacity(0.6), radius: 40, x: 0, y: 8)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .dynamicTypeSize(...DynamicTypeSize.accessibility3)
-                            .padding(.horizontal, 20)
+                            Text(book.title)
+                                .font(.system(.title, weight: .bold))
+                                .foregroundColor(.white)
+                                .shadow(color: .black.opacity(0.9), radius: 26, x: 0, y: 4)
+                                .shadow(color: .black.opacity(0.6), radius: 40, x: 0, y: 8)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                                .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+                                .padding(.horizontal, 20)
 
-                        Text(book.author)
-                            .font(.system(.title3))
-                            .foregroundColor(.gray)
-                            .shadow(color: .black.opacity(0.9), radius: 26, x: 0, y: 4)
-                            .shadow(color: .black.opacity(0.6), radius: 40, x: 0, y: 8)
-                            .padding(.top, 6)
-                            .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+                            Text(book.author)
+                                .font(.system(.title3))
+                                .foregroundColor(.gray)
+                                .shadow(color: .black.opacity(0.9), radius: 26, x: 0, y: 4)
+                                .shadow(color: .black.opacity(0.6), radius: 40, x: 0, y: 8)
+                                .padding(.top, 6)
+                                .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+                        }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel({
+                            let label = "\(book.title), by \(book.author)"
+                            print("[A11Y] Library label: \(label)")
+                            return label
+                        }())
 
                         Spacer()
 
@@ -221,6 +228,7 @@ struct LibraryView: View {
     private func coverView(for book: Audiobook, width: CGFloat, height: CGFloat) -> some View {
         if let image = book.coverImage {
             Image(uiImage: image)
+                .renderingMode(.original)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: width, height: height)
@@ -230,6 +238,8 @@ struct LibraryView: View {
                         .stroke(Color.white.opacity(0.15), lineWidth: 1)
                 )
                 .shadow(color: .white.opacity(0.15), radius: 12)
+                .accessibilityHidden(true)
+                .accessibilityLabel("")
         } else {
             ZStack {
                 RoundedRectangle(cornerRadius: 16)

@@ -163,7 +163,7 @@ class AudioPlayer {
         queuePlayer?.currentItem?.seek(to: seekTime, completionHandler: nil)
 
         // Re-setup time observer
-        if let obs = timeObserver { timeObserver = nil }
+        if timeObserver != nil { timeObserver = nil }
         let interval = CMTime(seconds: 1, preferredTimescale: 600)
         timeObserver = queuePlayer?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] _ in
             self?.updateCurrentPosition()
@@ -239,7 +239,7 @@ class AudioPlayer {
                     queuePlayer?.currentItem?.seek(to: seekTime, completionHandler: nil)
 
                     // Re-setup time observer
-                    if let obs = timeObserver {
+                    if timeObserver != nil {
                         // old player is gone, just nil it
                         timeObserver = nil
                     }
@@ -303,10 +303,10 @@ class AudioPlayer {
 
         for url in files {
             let asset = AVURLAsset(url: url)
-            let duration = CMTimeGetSeconds(asset.duration)
-            let d = duration.isFinite && duration > 0 ? duration : 0
-            trackDurations.append(d)
-            total += d
+            let d = CMTimeGetSeconds(asset.duration)
+                let duration = d.isFinite && d > 0 ? d : 0
+            trackDurations.append(duration)
+            total += duration
         }
 
         totalDuration = total
